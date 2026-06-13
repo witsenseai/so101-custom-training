@@ -1,8 +1,20 @@
 #!/bin/bash
 # train.sh
-source ~/lerobot-env/bin/activate
-source .env
-
+source ~/ws/lerobot/.venv/bin/activate
+export HF_TOKEN=your_token_here
+export HF_USER=witsense-ai
+export ROBOT_LEADER_PORT=/dev/ttyACM0
+export ROBOT_FOLLOWER_PORT=/dev/ttyACM1
+export TASK_NAME=pick_and_place_ring
+export TASK_DESC="pickup the ring and place it on the toy"
+export DATASET_REPO=${HF_USER}/so101_${TASK_NAME}
+export HF_LEROBOT_HOME=/home/suva/ws/lerobot/so101-custom-training
+export POLICY_REPO=${HF_USER}/so101_${TASK_NAME}_policy
+export PRETRAINED_CKPT=${HF_USER}/so101_${TASK_NAME}_pi_fast
+export TRAIN_OUTPUT_DIR=${HF_USER}/so101_${TASK_NAME}_train
+export HF_LEROBOT_HOME=/home/suva/ws/lerobot/so101-custom-training
+export JOB_NAME=act_so101_${TASK_NAME}
+DISPLAY=:1
 echo "Downloading dataset: ${DATASET_REPO}"
 huggingface-cli download ${DATASET_REPO} \
   --repo-type dataset \
