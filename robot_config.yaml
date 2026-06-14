@@ -1,0 +1,30 @@
+# Robot Hardware Configuration
+# This file documents the physical robot setup and port assignments
+
+robots:
+  leader:
+    id: left_leader
+    type: so101_leader
+    port: /dev/ttyACM2
+    description: "Leader arm (teleoperation input)"
+    calibration_dir: ./calibration/robots/so_leader
+
+  follower:
+    id: left_follower
+    type: so101_follower
+    port: /dev/ttyACM0
+    description: "Follower arm (policy execution)"
+    calibration_dir: ./calibration/robots/so_follower
+
+# Camera configuration (if applicable)
+cameras:
+  top:
+    index_or_path: /dev/video2
+    width: 640
+    height: 480
+    fps: 30
+  wrist:
+    index_or_path: /dev/video4
+    width: 640
+    height: 480
+    fps: 30

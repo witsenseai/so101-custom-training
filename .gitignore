@@ -7,3 +7,6 @@ space-sue/*
 witsense-ai/*
 SCRIPTS_SUMMARY.txt
 env
+env.local
+env.local.template
+ROBOT_SETUP.md
