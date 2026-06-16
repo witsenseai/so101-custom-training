@@ -6,35 +6,32 @@ ROOT_DIR="$(cd "$SCRIPT_DIR/.." >/dev/null 2>&1 && pwd)"
 source "$ROOT_DIR/../.venv/bin/activate"
 source "$ROOT_DIR/env"
 
-# Use the model trained by train_vla_jepa_fewshot.sh
-CHECKPOINT_PATH="${1:-$ROOT_DIR/outputs/train/vla_jepa_fewshot/checkpoints/last/pretrained_model}"
-EVAL_DATASET=witsense-ai/eval_vla_jepa_fewshot
-ROBOT_CAMERAS='{top: {type: opencv, index_or_path: /dev/video2, width: 640, height: 480, fps: 30}, wrist: {type: opencv, index_or_path: /dev/video4, width: 640, height: 480, fps: 30}}'
+POLICY_PATH="${1:-witsense-ai/so101_vla_jepa_fewshot_2000}"
+EVAL_DATASET=witsense-ai/rollout_eval_vla_jepa
+ROBOT_CAMERAS='{exterior_1_left: {type: opencv, index_or_path: /dev/video2, width: 640, height: 480, fps: 30}, exterior_2_left: {type: opencv, index_or_path: /dev/video4, width: 640, height: 480, fps: 30}}'
 
-if [ ! -d "$CHECKPOINT_PATH" ]; then
-  echo "❌ ERROR: Checkpoint path not found: $CHECKPOINT_PATH" >&2
-  echo "   Did you run: ./scripts/train_vla_jepa_fewshot.sh" >&2
-  exit 1
-fi
-
-echo "📊 Evaluating VLA-JEPA Few-Shot on SO-101"
-echo "   Policy: $CHECKPOINT_PATH"
+echo "Evaluating VLA-JEPA on SO-101"
+echo "   Policy: $POLICY_PATH"
 echo "   Dataset: $EVAL_DATASET"
 echo ""
 
 lerobot-rollout \
   --strategy.type=sentry \
-  --policy.path="$CHECKPOINT_PATH" \
+  --policy.path="$POLICY_PATH" \
+  --inference.type=sync \
   --robot.type=so101_follower \
   --robot.port="$ROBOT_FOLLOWER_PORT" \
   --robot.id=left_follower \
-  --robot.calibration_dir="$ROOT_DIR/calibration/robots/so_follower" \
   --robot.cameras="$ROBOT_CAMERAS" \
+  --fps=8 \
   --dataset.repo_id="$EVAL_DATASET" \
   --dataset.single_task="pickup the ring and place it on the toy" \
-  --dataset.num_episodes=5 \
+  --dataset.num_episodes=10 \
   --dataset.episode_time_s=30 \
-  --dataset.push_to_hub=true \
+  --dataset.push_to_hub=false \
+  --dataset.camera_encoder.vcodec=h264 \
+  --dataset.camera_encoder.preset=fast \
+  --dataset.streaming_encoding=true \
   --play_sounds=false
 
 echo ""
