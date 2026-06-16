@@ -41,6 +41,17 @@ fi
 echo "[4/4] HuggingFace login..."
 python3 -c "from huggingface_hub import login; login(token='$HF_TOKEN'); print('✓ Logged in')"
 
+# Symlink dataset from HF hub cache to LeRobot expected path
+HF_HOME="${HF_HOME:-/workspace/.hf_home}"
+DATASET_CACHE="$HF_HOME/hub/datasets--witsense-ai--so101_pick_and_place_ring/snapshots"
+LEROBOT_DATASET="$HF_HOME/lerobot/witsense-ai/so101_pick_and_place_ring"
+if [ -d "$DATASET_CACHE" ] && [ ! -L "$LEROBOT_DATASET" ]; then
+    SNAPSHOT=$(ls "$DATASET_CACHE" | head -1)
+    mkdir -p "$HF_HOME/lerobot/witsense-ai"
+    ln -sf "$DATASET_CACHE/$SNAPSHOT" "$LEROBOT_DATASET"
+    echo "✓ Dataset symlinked: $SNAPSHOT"
+fi
+
 echo ""
 echo "=== Starting Training ===" | tee -a "$LOG_FILE"
 echo "Dataset:    witsense-ai/so101_pick_and_place_ring"
