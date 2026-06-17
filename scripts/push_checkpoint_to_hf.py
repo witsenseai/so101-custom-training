@@ -3,19 +3,25 @@ import os
 import sys
 from huggingface_hub import HfApi, login
 
-if len(sys.argv) != 2:
-    print("Usage: python3 push_checkpoint_to_hf.py <repo_id>")
-    print("Example: python3 push_checkpoint_to_hf.py witsense-ai/so101_vla_jepa_fewshot")
+if len(sys.argv) < 3:
+    print("Usage: python3 push_checkpoint_to_hf.py <repo_id> <checkpoint_dir>")
+    print("")
+    print("Examples:")
+    print("  python3 push_checkpoint_to_hf.py witsense-ai/so101_act_fewshot /workspace/act_training/checkpoints/last/pretrained_model")
+    print("  python3 push_checkpoint_to_hf.py witsense-ai/so101_vla_jepa_v2  /workspace/vla_jepa_training_v2/checkpoints/last/pretrained_model")
     sys.exit(1)
 
 repo_id = sys.argv[1]
-token = os.environ.get("HF_TOKEN")
+checkpoint = sys.argv[2]
 
+token = os.environ.get("HF_TOKEN")
 if not token:
     print("ERROR: HF_TOKEN not set")
     sys.exit(1)
 
-checkpoint = os.environ.get("CHECKPOINT_PATH", "/workspace/vla_jepa_training/checkpoints/last/pretrained_model")
+if not os.path.isdir(checkpoint):
+    print(f"ERROR: checkpoint directory not found: {checkpoint}")
+    sys.exit(1)
 
 login(token=token)
 api = HfApi(token=token)
