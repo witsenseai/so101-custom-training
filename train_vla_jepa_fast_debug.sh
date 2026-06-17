@@ -2,8 +2,9 @@
 set -euo pipefail
 
 HF_TOKEN="${1:-${HF_TOKEN:-}}"
-LOG_FILE="/tmp/vla_jepa_training.log"
-VENV="/tmp/vla_jepa_env"
+LOG_FILE="/workspace/vla_jepa_training.log"
+VENV="/workspace/vla_jepa_env"
+export HF_HOME="/workspace/.hf_home"
 
 exec 1> >(tee -a "$LOG_FILE")
 exec 2>&1
@@ -41,16 +42,37 @@ fi
 echo "[4/4] HuggingFace login..."
 python3 -c "from huggingface_hub import login; login(token='$HF_TOKEN'); print('✓ Logged in')"
 
-# Symlink dataset from HF hub cache to LeRobot expected path
+# Ensure dataset tag exists, download, and symlink to LeRobot expected path
 HF_HOME="${HF_HOME:-/workspace/.hf_home}"
 DATASET_CACHE="$HF_HOME/hub/datasets--witsense-ai--so101_pick_and_place_ring/snapshots"
 LEROBOT_DATASET="$HF_HOME/lerobot/witsense-ai/so101_pick_and_place_ring"
-if [ -d "$DATASET_CACHE" ] && [ ! -L "$LEROBOT_DATASET" ]; then
-    SNAPSHOT=$(ls "$DATASET_CACHE" | head -1)
-    mkdir -p "$HF_HOME/lerobot/witsense-ai"
-    ln -sf "$DATASET_CACHE/$SNAPSHOT" "$LEROBOT_DATASET"
-    echo "✓ Dataset symlinked: $SNAPSHOT"
-fi
+
+echo "  Setting up dataset..."
+python3 << EOF
+from huggingface_hub import snapshot_download, HfApi
+
+api = HfApi(token="$HF_TOKEN")
+
+# Check existing tags
+refs = api.list_repo_refs("witsense-ai/so101_pick_and_place_ring", repo_type="dataset")
+existing_tags = [t.name for t in refs.tags]
+print(f"  Existing tags: {existing_tags}")
+
+if "v3.0" not in existing_tags:
+    api.create_tag("witsense-ai/so101_pick_and_place_ring", tag="v3.0", repo_type="dataset")
+    print("  ✓ Tag v3.0 created")
+else:
+    print("  ✓ Tag v3.0 already exists")
+
+snapshot_download("witsense-ai/so101_pick_and_place_ring", repo_type="dataset", token="$HF_TOKEN")
+print("  ✓ Dataset downloaded")
+EOF
+
+SNAPSHOT=$(ls "$DATASET_CACHE" | head -1)
+mkdir -p "$HF_HOME/lerobot/witsense-ai"
+rm -f "$LEROBOT_DATASET"
+ln -sf "$DATASET_CACHE/$SNAPSHOT" "$LEROBOT_DATASET"
+echo "✓ Dataset ready at $LEROBOT_DATASET → $SNAPSHOT"
 
 echo ""
 echo "=== Starting Training ===" | tee -a "$LOG_FILE"
@@ -67,7 +89,7 @@ lerobot-train \
   --policy.reinit_modules='["model.action_model.action_encoder", "model.action_model.action_decoder", "model.action_model.state_encoder"]' \
   --policy.device=cuda \
   --policy.repo_id=witsense-ai/so101_vla_jepa_fewshot \
-  --output_dir=/tmp/vla_jepa_training \
+  --output_dir=/workspace/vla_jepa_training \
   --job_name=vla_jepa_so101_fewshot \
   --wandb.enable=false \
   --steps=10000 \

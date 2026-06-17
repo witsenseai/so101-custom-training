@@ -15,7 +15,7 @@ if not token:
     print("ERROR: HF_TOKEN not set")
     sys.exit(1)
 
-checkpoint = "/tmp/vla_jepa_training/checkpoints/last/pretrained_model"
+checkpoint = os.environ.get("CHECKPOINT_PATH", "/workspace/vla_jepa_training/checkpoints/last/pretrained_model")
 
 login(token=token)
 api = HfApi(token=token)
