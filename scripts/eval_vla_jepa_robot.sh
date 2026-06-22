@@ -16,22 +16,24 @@ echo "   Dataset: $EVAL_DATASET"
 echo ""
 
 lerobot-rollout \
-  --strategy.type=sentry \
+  --strategy.type=episodic \
   --policy.path="$POLICY_PATH" \
+  --policy.resize_images_to='[224,224]' \
+  --policy.torch_dtype=float16 \
   --inference.type=sync \
   --robot.type=so101_follower \
   --robot.port="$ROBOT_FOLLOWER_PORT" \
   --robot.id=left_follower \
   --robot.cameras="$ROBOT_CAMERAS" \
-  --fps=8 \
+  --fps=1 \
   --dataset.repo_id="$EVAL_DATASET" \
   --dataset.single_task="pickup the ring and place it on the toy" \
   --dataset.num_episodes=10 \
   --dataset.episode_time_s=30 \
   --dataset.push_to_hub=false \
   --dataset.camera_encoder.vcodec=h264 \
-  --dataset.camera_encoder.preset=fast \
-  --dataset.streaming_encoding=true \
+  --dataset.camera_encoder.preset=ultrafast \
+  --dataset.streaming_encoding=false \
   --play_sounds=false
 
 echo ""
