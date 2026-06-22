@@ -3,6 +3,7 @@ set -euo pipefail
 
 HF_TOKEN="${1:-${HF_TOKEN:-}}"
 VRAM_GB="${2:-16}"
+export WANDB_API_KEY="${WANDB_API_KEY:-}"
 LOG_FILE="/workspace/vla_jepa_training.log"
 VENV="/workspace/vla_jepa_env"
 export HF_HOME="/workspace/.hf_home"
@@ -82,7 +83,8 @@ lerobot-train \
   --policy.repo_id=witsense-ai/so101_vla_jepa_v3 \
   --output_dir=/workspace/vla_jepa_training_v3 \
   --job_name=vla_jepa_so101_v3 \
-  --wandb.enable=false \
+  --wandb.enable=true \
+  --wandb.project=so101_vla_jepa \
   --steps=15000 \
   --batch_size=$BATCH_SIZE \
   --num_workers=4 \
